@@ -6,8 +6,11 @@ current_dir=$(pwd)
 # Change to the venv directory
 cd venv
 
+# Create venv using python module
+python3 -m venv venv
+
 # Activate the virtual environment
-source bin/activate
+source venv/bin/activate
 
 # Install requirements
 pip install -r requirements.txt
