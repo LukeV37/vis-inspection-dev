@@ -1,6 +1,0 @@
-numpy
-opencv-python
-matplotlib
-rembg
-onnxruntime
-torch

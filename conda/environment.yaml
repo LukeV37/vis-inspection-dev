@@ -1,0 +1,16 @@
+name: vis-inspec
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - cudatoolkit=11.8
+  - cudnn=8.9
+  - pip
+  - pip:
+    - tensorflow[and-cuda]
+    - onnxruntime-gpu==1.16.3
+    - numpy<2
+    - opencv-python
+    - matplotlib
+    - rembg
