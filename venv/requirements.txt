@@ -2,4 +2,5 @@ numpy
 opencv-python
 matplotlib
 rembg
+onnxruntime-gpu
 torch
