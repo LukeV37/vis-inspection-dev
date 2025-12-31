@@ -17,7 +17,7 @@ def load_data_from_path(path):
 def rotate_image_about_center(image, angle, scale):
     center = (image.shape[1] // 2, image.shape[0] // 2)
     rotation_matrix = cv.getRotationMatrix2D(center, angle, scale)
-    rotated_image = cv.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]))
+    rotated_image = cv.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]),borderValue=(255, 255, 255))
     return rotated_image
 
 def preprocess_dataset(images):
@@ -25,10 +25,9 @@ def preprocess_dataset(images):
 
     angle_list = [x for x in range(-30,31,1)]
     for i in tqdm(range(len(images))):
-        image = images[i]
+        clean_image = remove(images[i])
         for angle in angle_list:
-            rotated_image = rotate_image_about_center(image, angle, 1)
-            clean_rotated_image = remove(rotated_image)
+            rotated_image = rotate_image_about_center(clean_image, angle, 1)
             rotated_images.append(rotated_image)
     return rotated_images
 
