@@ -33,10 +33,10 @@ def preprocess_dataset(images, max_angle, angle_step, outpath, save=False):
             if save:
                 plt.imsave(outpath+'output_'+str(i)+'_'+str(angle)+'.png', rotated_image)
             preprocessed_images.append(rotated_image)
-    return np.array(preprocessed_images)
+    return np.array(preprocessed_images, dtype='float32')
 
-def do_preprocessing(data_path="./datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/",
-         out_path="./preprocess/",
+def do_preprocessing(data_path="../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/",
+         out_path="./",
          max_angle=0, angle_step=1):
     print("Preprocessing path: ", data_path)
     print()
