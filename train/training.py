@@ -15,7 +15,7 @@ def do_training(in_path, model):
     x_test  = dataset[test_split:]
 
     # Pass sample data to initialize the model
-    pred = model(x_train[0:1])
+    pred_image = model(x_train[0:1])
 
     # Print Summary of the model
     print("Encoder summary:")
@@ -31,6 +31,6 @@ def do_training(in_path, model):
 
 if __name__=="__main__":
     from model import ConvAutoencoder
-    model = ConvAutoencoder(embed_dim=64, batch_size=4)
+    model = ConvAutoencoder(embed_dim=64)
     in_path = "../preprocess/dataset.npy"
     do_training(in_path, model)
