@@ -20,11 +20,12 @@ def rotate_image_about_center(image, angle, scale):
     rotated_image = cv.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]))
     return rotated_image
 
-def augment_dataset(images)
+def preprocess_dataset(images):
     rotated_images = []
 
     angle_list = [x for x in range(-30,31,1)]
-    for image in images:
+    for i in tqdm(range(len(images))):
+        image = images[i]
         for angle in angle_list:
             rotated_image = rotate_image_about_center(image, angle, 1)
             clean_rotated_image = remove(rotated_image)
@@ -34,9 +35,12 @@ def augment_dataset(images)
 def convert_to_pytorch_dataset(images):
     return dataset
 
-def main(data_path="../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg"):
+def main(data_path="../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"):
+    print("Loading Dataset as numpy arrays...")
     images_list = load_data_from_path(data_path)
-    images_list_augmented = augment_dataset(images_list)
+    print("Preprocessing Dataset by removing background...")
+    images_list_preprocessed = preprocess_dataset(images_list)
+    print("Converting Dataset to pyTorch Tensors...")
     pytorch_dataset = convert_to_pytorch_dataset(images_list_augmented)
     return
 
