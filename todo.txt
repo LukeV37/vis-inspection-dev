@@ -32,10 +32,8 @@ Additional improvements for this repository:
 
 11. Implement model compression techniques like knowledge distillation to create smaller, faster models without significant loss in performance.
 
-12. Add support for different data formats and data loading strategies to improve flexibility with various dataset types.
+12. Implement early stopping with patience parameter to prevent overfitting more effectively.
 
-13. Implement early stopping with patience parameter to prevent overfitting more effectively.
+13. Add model serialization and deserialization capabilities for saving and loading trained models.
 
-14. Add model serialization and deserialization capabilities for saving and loading trained models.
-
-15. Include documentation for all functions and classes to improve maintainability and usability.
+14. Include documentation for all functions and class to improve maintainability and usability.
