@@ -39,5 +39,7 @@ python main.py
   - `model.py`: Autoencoder model definitions
   - `training.py`: Training logic
 - `preprocess/`: Data preprocessing utilities
+  - `preprocessing.py`: Preprocessing functions
 - `datasets/`: Dataset storage directory
 - `conda/`: Conda environment setup files
+```
