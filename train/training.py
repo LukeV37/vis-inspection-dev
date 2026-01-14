@@ -29,6 +29,8 @@ def do_training(in_path, model):
     # Train the model
     model.fit(x_train, x_train, epochs=10, batch_size=4)
 
+    model.save("my_model.keras")
+
 if __name__=="__main__":
     from model import ConvAutoencoder
     model = ConvAutoencoder(embed_dim=64)
