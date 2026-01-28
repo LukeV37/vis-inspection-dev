@@ -1,6 +1,6 @@
 import numpy as np
 
-def do_training(in_path, model):
+def do_training(in_path, model_file, model):
     # Load the dataset
     dataset = np.load(in_path)
 
@@ -29,12 +29,13 @@ def do_training(in_path, model):
     # Train the model
     model.fit(x_train, x_train, epochs=10, batch_size=4)
 
-    # Save the weights 
-    model.save_weights("my_model.weights.h5")
+    # Save the weights
+    model.save_weights(model_file)
 
 
 if __name__=="__main__":
     from model import ConvAutoencoder
+    model_file="../output/my_model.weights.h5"
     model = ConvAutoencoder(embed_dim=64)
-    in_path = "../preprocess/dataset.npy"
-    do_training(in_path, model)
+    in_path = "../output/dataset.npy"
+    do_training(in_path, model_file, model)
