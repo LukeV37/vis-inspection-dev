@@ -1,5 +1,4 @@
 ''''
-
 Usage:
   python eval.py --input ../preprocess/dataset.npy --model my_model.keras --out predictions --split 0.8
 
@@ -26,7 +25,6 @@ import tensorflow as tf
 def eval_model(in_path, out_dir="predictions"): 
 
     # Create the output directory 
-    
     os.makedirs(out_dir, exist_ok=True)
     
     
@@ -39,14 +37,16 @@ def eval_model(in_path, out_dir="predictions"):
     test_split=int(0.8*num_samples)
     x_test  = dataset[test_split:]
     
-    # load the trained model 
-    model = tf.keras.models.load_model('my_model.keras')
+    # load the trained weights 
+    model = ConvAutoencoder(embed_dim=64)
+    model(x_test[0:1])  # build
+    model.load_weights("my_model.weights.h5")
+
     
     # run the predictions 
     pred_image = model.predict(x_test)  
     
     # Save each of the predictions as a JPG
-    
     for i, img in enumerate(pred_image): 
         
         # Remove the channel dimensions if grayscale  

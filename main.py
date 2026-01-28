@@ -9,4 +9,4 @@ preprocess_path="./preprocess/"
 do_preprocessing(dataset_path, preprocess_path)
 model = ConvAutoencoder(embed_dim=64)
 do_training(preprocess_path+"dataset.npy", model)
-eval_model("../preprocess/dataset.npy", out_dir="predictions")
+eval_model("./preprocess/dataset.npy", out_dir="predictions")
