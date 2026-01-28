@@ -25,7 +25,7 @@ def rotate_image_about_center(image, angle, scale):
     rotated_image = cv.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]),borderValue=(0, 0, 0))
     return rotated_image
 
-def preprocess_dataset(images, max_angle, angle_step, outpath, save=False):
+def preprocess_dataset(images, max_angle, angle_step):
     # Initialize empy list of preprocessed images
     preprocessed_images = []
 
@@ -41,30 +41,43 @@ def preprocess_dataset(images, max_angle, angle_step, outpath, save=False):
             # Augment the dataset with a NEW rotated image
             rotated_image = rotate_image_about_center(clean_image, angle, scale=1)
             # Remove the transparency layer and only store RGB values
-            rotated_image = rotated_image[:,:,0:3]
-            # If save=True; store images as png
-            if save:
-                plt.imsave(outpath+'output_'+str(i)+'_'+str(angle)+'.png', rotated_image)
+            rotated_image = rotated_image[:,:,0:3]/255
             # Append image to preprocessed image list
             preprocessed_images.append(rotated_image)
     # Return an array of preprocessed images as numpy float32
     return np.array(preprocessed_images, dtype='float32')
 
-def do_preprocessing(data_path="../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/",
-         out_path="./",
-         max_angle=0, angle_step=1):
+def save_images(images, out_dir):
+    # Create the output directory
+    os.makedirs(out_dir, exist_ok=True)
+    for i in tqdm(range(len(images))):
+        img=images[i]
+        out_path = os.path.join(out_dir, f"raw_{i:04d}.png")
+        plt.imsave(out_path, img)
+
+def do_preprocessing(data_path, out_file, image_dir, max_angle=0, angle_step=1):
     print("Preprocessing path: ", data_path)
     print()
     print("Loading Dataset as numpy arrays...")
     images_list = load_data_from_path(data_path)
     print()
     print("Preprocessing Dataset by removing background...")
-    images_list_preprocessed = preprocess_dataset(images_list, max_angle, angle_step, out_path, save=False)
+    images_list_preprocessed = preprocess_dataset(images_list, max_angle, angle_step)
     print()
     print("Shape of Dataset: ", images_list_preprocessed.shape)
+    print()
     print("Saving dataset as numpy file...")
-    np.save(out_path+'dataset.npy', images_list_preprocessed)
+    np.save(out_file, images_list_preprocessed)
+    print()
+    print("Saving preprocessed images...")
+    save_images(images_list_preprocessed,image_dir)
+    print()
     return
 
 if __name__=="__main__":
-    do_preprocessing()
+    data_path = "../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"
+    out_file= "../output/dataset.npy"
+    image_dir="../output/input_images"
+    max_angle=0
+    angle_step=1
+    do_preprocessing(data_path, out_file, image_dir, max_angle, angle_step)
