@@ -19,7 +19,8 @@ raw_image_dir=job_path+"original_images/"
 pred_image_dir=job_path+"pred_images/"
 
 # Model Parameters
-latent_dim=64
+latent_dim=1024
+epochs=2
 
 # Initialize model
 model = ConvAutoencoder(latent_dim)
@@ -28,6 +29,6 @@ model = ConvAutoencoder(latent_dim)
 if doPreprocessing:
     do_preprocessing(dataset_path, preprocess_data, raw_image_dir)
 if doTraining:
-    do_training(preprocess_data, model_file, model)
+    do_training(preprocess_data, model_file, model, epochs)
 if doEval:
     eval_model(preprocess_data, model_file, pred_image_dir, model)
