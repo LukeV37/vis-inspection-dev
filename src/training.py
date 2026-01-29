@@ -27,7 +27,7 @@ def do_training(in_path, model_file, model, epochs):
     model.compile(optimizer='adam', loss='mse')
 
     # Train the model
-    model.fit(x_train, x_train, epochs=epochs, batch_size=4)
+    model.fit(x_train, x_train, epochs=epochs, batch_size=4, validation_data=(x_val, x_val))
 
     # Save the weights
     model.save_weights(model_file)
