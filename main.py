@@ -19,11 +19,12 @@ raw_image_dir=job_path+"original_images/"
 pred_image_dir=job_path+"pred_images/"
 
 # Model Parameters
-latent_dim=256
+latent_dim=128
+channels=12
 epochs=20
 
 # Initialize model
-model = ConvAutoencoder(latent_dim)
+model = ConvAutoencoder(latent_dim, channels)
 
 # Do Jobs
 if doPreprocessing:

@@ -23,14 +23,17 @@ class Encoder(keras.Model):
         Input -> Conv1 (12x12 kernel, 6 stride) -> Conv2 (10x10 kernel, 5 stride) 
         -> Conv3 (4x4 kernel, 4 stride) -> Flatten -> Dense (embedding_dim)
     """
-    def __init__(self, embedding_dim):
+    def __init__(self, embedding_dim, channels):
         super(Encoder, self).__init__()
         # Conv1: Input (batch, 1080, 1920, 3) -> Output (batch, 180, 320, 4)
-        self.conv1 = layers.Conv2D(4, kernel_size=12, strides=6, padding='same', activation='relu')
+        self.conv1 = layers.Conv2D(filters=4, kernel_size=12, strides=1, padding='same', activation='relu')
+        self.pool1 = layers.MaxPool2D(pool_size=6, padding='same')
         # Conv2: Input (batch, 180, 320, 4) -> Output (batch, 36, 64, 8)
-        self.conv2 = layers.Conv2D(8, kernel_size=10, strides=5, padding='same', activation='relu')
+        self.conv2 = layers.Conv2D(filters=8, kernel_size=10, strides=1, padding='same', activation='relu')
+        self.pool2 = layers.MaxPool2D(pool_size=5, padding='same')
         # Conv3: Input (batch, 36, 64, 8) -> Output (batch, 9, 16, 16)
-        self.conv3 = layers.Conv2D(16, kernel_size=4, strides=4, padding='same', activation='relu')
+        self.conv3 = layers.Conv2D(filters=channels, kernel_size=4, strides=1, padding='same', activation='relu')
+        self.pool3 = layers.MaxPool2D(pool_size=4, padding='same')
         # Flatten: Input (batch, 9, 16, 16) -> Output (batch, 2304)
         self.flatten = layers.Flatten()
         # Fully Connected: Input (batch, 9*16*16) -> Output (batch, embedding_dim)
@@ -38,8 +41,11 @@ class Encoder(keras.Model):
 
     def call(self, x):
         x = self.conv1(x)
+        x = self.pool1(x)
         x = self.conv2(x)
+        x = self.pool2(x)
         x = self.conv3(x)
+        x = self.pool3(x)
         x = self.flatten(x)
         x = self.fc(x)
         return x
@@ -76,12 +82,12 @@ class Decoder(keras.Model):
         # Reshape layer: Input (batch, 9*16*16) -> Output (batch, 9, 16, 16)
         self.target_shape = (height, width, channels)
         self.reshape = layers.Reshape(self.target_shape)
-        # Deconv1: Input (batch, 9, 16, 16) -> Output (batch, 36, 64, 8)
-        self.deconv1 = layers.Conv2DTranspose(8, kernel_size=4, strides=4, padding='same', activation='relu')
-        # Deconv2: Input (batch, 36, 64, 8) -> Output (batch, 180, 320, 4)
-        self.deconv2 = layers.Conv2DTranspose(4, kernel_size=10, strides=5, padding='same', activation='relu')
-        # Deconv3: Input (batch, 180, 320, 4) -> Output (batch, 1080, 1920, 3)
-        self.deconv3 = layers.Conv2DTranspose(3, kernel_size=12, strides=6, padding='same', activation='sigmoid')
+        self.deconv1 = layers.Conv2DTranspose(filters=16, kernel_size=4, strides=2, padding='same', activation='relu')
+        self.deconv2 = layers.Conv2DTranspose(filters=16, kernel_size=4, strides=2, padding='same', activation='relu')
+        self.deconv3 = layers.Conv2DTranspose(filters=16, kernel_size=4, strides=2, padding='same', activation='relu')
+        self.deconv4 = layers.Conv2DTranspose(filters=8, kernel_size=6, strides=3, padding='same', activation='relu')
+        self.deconv5 = layers.Conv2DTranspose(filters=3, kernel_size=10, strides=5, padding='same', activation='sigmoid')
+        self.convSmooth = layers.Conv2D(filters=3, kernel_size=2, strides=1, padding='same', activation='sigmoid')
 
     def call(self, x):
         x = self.fc(x)
@@ -89,6 +95,9 @@ class Decoder(keras.Model):
         x = self.deconv1(x)
         x = self.deconv2(x)
         x = self.deconv3(x)
+        x = self.deconv4(x)
+        x = self.deconv5(x)
+        #x = self.convSmooth(x)
         return x
 
 
@@ -115,10 +124,10 @@ class ConvAutoencoder(keras.Model):
     Forward pass:
         Input -> Encoder -> Latent vector -> Decoder -> Reconstructed image
     """
-    def __init__(self, embed_dim=64):
+    def __init__(self, embed_dim=64, channels=8):
         super(ConvAutoencoder, self).__init__()
-        self.encoder = Encoder(embed_dim)
-        self.decoder = Decoder(embed_dim, height=9, width=16, channels=16)
+        self.encoder = Encoder(embed_dim, channels=channels)
+        self.decoder = Decoder(embed_dim, height=9, width=16, channels=channels)
 
     def call(self, x):
         latent_vector = self.encoder(x)
