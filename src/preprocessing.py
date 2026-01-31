@@ -6,11 +6,6 @@ import os
 import glob
 from tqdm import tqdm
 
-def load_data_from_file(file):
-    image = cv.imread(file) # Convert jpg to BGR array (1080,1920,3)
-    image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB) # Convert BGR to RBG array
-    return image_rgb
-
 def rotate_image_about_center(image, angle, scale):
     center = (image.shape[1] // 2, image.shape[0] // 2)
     height, width = (image.shape[0], image.shape[1])
@@ -24,22 +19,7 @@ def translate_image(image, x_translate, y_translate):
     image_translated = cv.warpAffine(image, T_matrix, (width, height),borderValue=(0, 0, 0))
     return image_translated
 
-def remove_background(image):
-    clean_image = remove(image)
-    return clean_image
-
-def augment_image(image, x_translation, y_translation, rotation_angle, scale):
-    image = translate_image(image, x_translation, y_translation)
-    image = rotate_image_about_center(image, rotation_angle, scale)
-    return image
-
-def save_image(image, out_dir):
-    # Create the output directory
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f"raw_{i:04d}.png")
-    plt.imsave(out_path, img)
-
-def do_prepreprocessing(in_path, out_path, split=(0.8,0.05,0.15)):
+def clean_raw_images(in_path, out_path, split=(0.8,0.05,0.15)):
     raw_image_list = glob.glob(in_path+"*.jpg")
     image_ID = [i for i in range(len(raw_image_list))]
 
@@ -52,8 +32,9 @@ def do_prepreprocessing(in_path, out_path, split=(0.8,0.05,0.15)):
 
     for i in tqdm(range(len(image_ID))):
         ID = image_ID[i]
-        image = load_data_from_file(raw_image_list[ID])
-        clean_image = remove_background(image)[:,:,0:3] # Remove transparancy layer
+        image = cv.imread(raw_image_list[i]) # Convert jpg to BGR array (1080,1920,3)
+        image = cv.cvtColor(image, cv.COLOR_BGR2RGB) # Convert BGR to RBG array
+        clean_image = remove(image)[:,:,0:3] # Remove transparancy layer
         if ID <= train_split:
             save_type="Train"
         elif ID > train_split and ID <= test_split:
@@ -67,7 +48,7 @@ def do_prepreprocessing(in_path, out_path, split=(0.8,0.05,0.15)):
         out_file_png = os.path.join(out_path, save_type, f"clean_{ID:04d}.png")
         plt.imsave(out_file_png, clean_image)
 
-def do_preprocessing(path, max_x, max_y, max_r):
+def augment_dataset(path, max_x, max_y, max_r):
     image_list = glob.glob(path+"clean*.npy")
     names = [os.path.basename(x) for x in image_list]
     IDs = [name[6:10] for name in names]
@@ -83,7 +64,8 @@ def do_preprocessing(path, max_x, max_y, max_r):
         for x in x_list:
             for y in y_list:
                 for r in r_list:
-                    image_augmented = augment_image(image, x, y, r, 1)
+                    image_augmented = translate_image(image, x, y)
+                    image_augmented = rotate_image_about_center(image_augmented, r, 1.0)
 
                     out_file_npy = os.path.join(path, "preprocessed_"+ID+"_x"+str(x)+"_y"+str(y)+"_angle"+str(r)+".npy")
                     np.save(out_file_npy, image_augmented)
@@ -95,7 +77,7 @@ if __name__=="__main__":
     data_path = "../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"
     out_path= "../output/"
     os.makedirs(out_path, exist_ok=True)
-    #do_prepreprocessing(data_path, out_path)
+    clean_raw_images(data_path, out_path)
     for split_type in ["Train/", "Val/", "Test/"]:
         print("Preprocessing ", split_type)
-        do_preprocessing(out_path+split_type, 100, 100, 5)
+        augment_dataset(out_path+split_type, 100, 100, 5)
