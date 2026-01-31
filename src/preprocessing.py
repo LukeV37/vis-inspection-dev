@@ -3,81 +3,99 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rembg import remove
 import os
+import glob
 from tqdm import tqdm
 
-def load_data_from_path(path):
-    # Store all images from path into file_list
-    file_list = os.listdir(path)
-    # Initialize empty data list
-    data_list = []
-    # Loop over each file in file list
-    for i in tqdm(range(len(file_list))):
-        file = file_list[i] # Grab a sinlge image
-        image = cv.imread(path+file) # Convert jpg to BGR array (1080,1920,3)
-        image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB) # Convert BGR to RBG array
-        data_list.append(image_rgb) # Append the RBG array to data list
-    return data_list
+def load_data_from_file(file):
+    image = cv.imread(file) # Convert jpg to BGR array (1080,1920,3)
+    image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB) # Convert BGR to RBG array
+    return image_rgb
 
-### Optional rotation function for dataset augmentation
 def rotate_image_about_center(image, angle, scale):
     center = (image.shape[1] // 2, image.shape[0] // 2)
+    height, width = (image.shape[0], image.shape[1])
     rotation_matrix = cv.getRotationMatrix2D(center, angle, scale)
-    rotated_image = cv.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]),borderValue=(0, 0, 0))
+    rotated_image = cv.warpAffine(image, rotation_matrix, (width, height),borderValue=(0, 0, 0))
     return rotated_image
 
-def preprocess_dataset(images, max_angle, angle_step):
-    # Initialize empy list of preprocessed images
-    preprocessed_images = []
+def translate_image(image, x_translate, y_translate):
+    height, width = (image.shape[0], image.shape[1])
+    T_matrix = np.float32([[1, 0, x_translate], [0, 1, y_translate]])
+    image_translated = cv.warpAffine(image, T_matrix, (width, height),borderValue=(0, 0, 0))
+    return image_translated
 
-    # If performing rotations, generate list of angles
-    # By default, max_angle=0 so angle list=[0] and no rotations
-    angle_list = [x for x in range(-1*max_angle,max_angle+1,angle_step)]
+def remove_background(image):
+    clean_image = remove(image)
+    return clean_image
 
-    # Iterate over images
-    for i in tqdm(range(len(images))):
-        clean_image = remove(images[i]) # Remove the background using rembg lib
-        # If rotating, iterate over angles
-        for angle in angle_list:
-            # Augment the dataset with a NEW rotated image
-            rotated_image = rotate_image_about_center(clean_image, angle, scale=1)
-            # Remove the transparency layer and only store RGB values
-            rotated_image = rotated_image[:,:,0:3]/255
-            # Append image to preprocessed image list
-            preprocessed_images.append(rotated_image)
-    # Return an array of preprocessed images as numpy float32
-    return np.array(preprocessed_images, dtype='float32')
+def augment_image(image, x_translation, y_translation, rotation_angle, scale):
+    image = translate_image(image, x_translation, y_translation)
+    image = rotate_image_about_center(image, rotation_angle, scale)
+    return image
 
-def save_images(images, out_dir):
+def save_image(image, out_dir):
     # Create the output directory
     os.makedirs(out_dir, exist_ok=True)
-    for i in tqdm(range(len(images))):
-        img=images[i]
-        out_path = os.path.join(out_dir, f"raw_{i:04d}.png")
-        plt.imsave(out_path, img)
+    out_path = os.path.join(out_dir, f"raw_{i:04d}.png")
+    plt.imsave(out_path, img)
 
-def do_preprocessing(data_path, out_file, image_dir, max_angle=0, angle_step=1):
-    print("Preprocessing path: ", data_path)
-    print()
-    print("Loading Dataset as numpy arrays...")
-    images_list = load_data_from_path(data_path)
-    print()
-    print("Preprocessing Dataset by removing background...")
-    images_list_preprocessed = preprocess_dataset(images_list, max_angle, angle_step)
-    print()
-    print("Shape of Dataset: ", images_list_preprocessed.shape)
-    print()
-    print("Saving dataset as numpy file...")
-    np.save(out_file, images_list_preprocessed)
-    print()
-    print("Saving preprocessed images...")
-    save_images(images_list_preprocessed,image_dir)
-    print()
-    return
+def do_prepreprocessing(in_path, out_path, split=(0.8,0.05,0.15)):
+    raw_image_list = glob.glob(in_path+"*.jpg")
+    image_ID = [i for i in range(len(raw_image_list))]
+
+    os.makedirs(out_path+"Train", exist_ok=True)
+    os.makedirs(out_path+"Val", exist_ok=True)
+    os.makedirs(out_path+"Test", exist_ok=True)
+
+    train_split=int(len(raw_image_list)*split[0])
+    test_split=int(len(raw_image_list)*(split[0]+split[1]))
+
+    for i in tqdm(range(len(image_ID))):
+        ID = image_ID[i]
+        image = load_data_from_file(raw_image_list[ID])
+        clean_image = remove_background(image)[:,:,0:3] # Remove transparancy layer
+        if ID <= train_split:
+            save_type="Train"
+        elif ID > train_split and ID <= test_split:
+            save_type="Val"
+        else:
+            save_type="Test"
+
+        out_file_npy = os.path.join(out_path, save_type, f"clean_{ID:04d}.npy")
+        np.save(out_file_npy, clean_image)
+
+        out_file_png = os.path.join(out_path, save_type, f"clean_{ID:04d}.png")
+        plt.imsave(out_file_png, clean_image)
+
+def do_preprocessing(path, max_x, max_y, max_r):
+    image_list = glob.glob(path+"clean*.npy")
+    names = [os.path.basename(x) for x in image_list]
+    IDs = [name[6:10] for name in names]
+
+    x_list = [x for x in range(-max_x, max_x+1, 100)]
+    y_list = [y for y in range(-max_y, max_y+1, 100)]
+    r_list = [r for r in range(-max_r, max_r+1, 5)]
+
+    for i in tqdm(range(len(image_list))):
+        image = np.load(image_list[i])
+        ID = IDs[i]
+
+        for x in x_list:
+            for y in y_list:
+                for r in r_list:
+                    image_augmented = augment_image(image, x, y, r, 1)
+
+                    out_file_npy = os.path.join(path, "preprocessed_"+ID+"_x"+str(x)+"_y"+str(y)+"_angle"+str(r)+".npy")
+                    np.save(out_file_npy, image_augmented)
+
+                    out_file_png = os.path.join(path, "preprocessed_"+ID+"_x"+str(x)+"_y"+str(y)+"_angle"+str(r)+".png")
+                    plt.imsave(out_file_png, image_augmented)
 
 if __name__=="__main__":
     data_path = "../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"
-    out_file= "../output/dataset.npy"
-    image_dir="../output/input_images"
-    max_angle=0
-    angle_step=1
-    do_preprocessing(data_path, out_file, image_dir, max_angle, angle_step)
+    out_path= "../output/"
+    os.makedirs(out_path, exist_ok=True)
+    #do_prepreprocessing(data_path, out_path)
+    for split_type in ["Train/", "Val/", "Test/"]:
+        print("Preprocessing ", split_type)
+        do_preprocessing(out_path+split_type, 100, 100, 5)
