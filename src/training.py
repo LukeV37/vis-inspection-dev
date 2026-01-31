@@ -1,21 +1,19 @@
 import numpy as np
+import glob
+from data_loader import create_dataset
+import tensorflow as tf
 
-def do_training(in_path, model_file, model, epochs):
+def do_training(in_path, model_file, model, epochs, batch_size):
     # Load the dataset
-    dataset = np.load(in_path)
+    train_file_paths = sorted(glob.glob(in_path+'Train/preprocessed*.npy'))
+    val_file_paths = sorted(glob.glob(in_path+'Val/preprocessed*.npy'))
 
-    # Determine train/test split base on number of samples
-    num_samples=len(dataset)
-    train_split=int(0.75*num_samples)
-    test_split=int(0.8*num_samples)
+    train_dataset = create_dataset(train_file_paths, batch_size=batch_size, shuffle=True)
+    val_dataset = create_dataset(val_file_paths, batch_size=batch_size, shuffle=False)
 
-    # Split the dataset into train/val/test
-    x_train = dataset[:train_split]
-    x_val   = dataset[train_split:test_split]
-    x_test  = dataset[test_split:]
-
-    # Pass sample data to initialize the model
-    pred_image = model(x_train[0:1])
+    # Pass dummy data to initialize the model
+    dummy_input = tf.zeros((1, 1080, 1920, 3))
+    _ = model(dummy_input)
 
     # Print Summary of the model
     print("Encoder summary:")
@@ -27,16 +25,17 @@ def do_training(in_path, model_file, model, epochs):
     model.compile(optimizer='adam', loss='mse')
 
     # Train the model
-    model.fit(x_train, x_train, epochs=epochs, batch_size=4, validation_data=(x_val, x_val))
+    model.fit(train_dataset, epochs=epochs, validation_data=val_dataset, steps_per_epoch=len(train_file_paths) // batch_size, validation_steps=len(val_file_paths) // batch_size)
 
     # Save the weights
     model.save_weights(model_file)
 
-
 if __name__=="__main__":
     from model import ConvAutoencoder
+
+    model = ConvAutoencoder(embed_dim=64, channels=16)
     model_file="../output/my_model.weights.h5"
-    model = ConvAutoencoder(embed_dim=64)
-    in_path = "../output/dataset.npy"
+    in_path="../output/"
     epochs=2
-    do_training(in_path, model_file, model, epochs)
+    batch_size=32
+    do_training(in_path, model_file, model, epochs, batch_size)
