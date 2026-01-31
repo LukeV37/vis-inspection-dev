@@ -5,6 +5,9 @@ from rembg import remove
 import os
 import glob
 from tqdm import tqdm
+from multiprocessing import Pool
+from functools import partial
+import itertools
 
 def rotate_image_about_center(image, angle, scale):
     center = (image.shape[1] // 2, image.shape[0] // 2)
@@ -48,36 +51,52 @@ def clean_raw_images(in_path, out_path, split=(0.8,0.05,0.15)):
         out_file_png = os.path.join(out_path, save_type, f"clean_{ID:04d}.png")
         plt.imsave(out_file_png, clean_image)
 
-def augment_dataset(path, max_x, max_y, max_r):
+def process_augmentation(params, image, ID, path):
+    """Process a single augmentation combination"""
+    x, y, r = params
+
+    image_augmented = translate_image(image, x, y)
+    image_augmented = rotate_image_about_center(image_augmented, r, 1.0)
+
+    out_file_npy = os.path.join(path, f"preprocessed_{ID}_x{x}_y{y}_angle{r}.npy")
+    np.save(out_file_npy, image_augmented)
+
+    out_file_png = os.path.join(path, f"preprocessed_{ID}_x{x}_y{y}_angle{r}.png")
+    plt.imsave(out_file_png, image_augmented)
+    return True
+
+def augment_dataset(path, max_x, max_y, max_r, n_workers):
     image_list = glob.glob(path+"clean*.npy")
     names = [os.path.basename(x) for x in image_list]
     IDs = [name[6:10] for name in names]
 
-    x_list = [x for x in range(-max_x, max_x+1, 100)]
-    y_list = [y for y in range(-max_y, max_y+1, 100)]
-    r_list = [r for r in range(-max_r, max_r+1, 5)]
+    x_list = [x for x in range(-max_x, max_x+1, 1)]
+    y_list = [y for y in range(-max_y, max_y+1, 1)]
+    r_list = [r for r in range(-max_r, max_r+1, 1)]
+
+	# Create all parameter combinations
+    param_combinations = list(itertools.product(x_list, y_list, r_list))
 
     for i in tqdm(range(len(image_list))):
         image = np.load(image_list[i])
         ID = IDs[i]
 
-        for x in x_list:
-            for y in y_list:
-                for r in r_list:
-                    image_augmented = translate_image(image, x, y)
-                    image_augmented = rotate_image_about_center(image_augmented, r, 1.0)
+        # Create a partial function with fixed image, ID, and path
+        worker_func = partial(process_augmentation, image=image, ID=ID, path=path)
 
-                    out_file_npy = os.path.join(path, "preprocessed_"+ID+"_x"+str(x)+"_y"+str(y)+"_angle"+str(r)+".npy")
-                    np.save(out_file_npy, image_augmented)
-
-                    out_file_png = os.path.join(path, "preprocessed_"+ID+"_x"+str(x)+"_y"+str(y)+"_angle"+str(r)+".png")
-                    plt.imsave(out_file_png, image_augmented)
+        # Process all combinations in parallel
+        with Pool(n_workers) as pool:
+            pool.map(worker_func, param_combinations)
 
 if __name__=="__main__":
     data_path = "../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"
-    out_path= "../output/"
+    out_path= "../output_debug/"
     os.makedirs(out_path, exist_ok=True)
-    clean_raw_images(data_path, out_path)
+    max_x = 5
+    max_y = 5
+    max_r = 5
+    n_workers = 8
+    #clean_raw_images(data_path, out_path)
     for split_type in ["Train/", "Val/", "Test/"]:
         print("Preprocessing ", split_type)
-        augment_dataset(out_path+split_type, 100, 100, 5)
+        augment_dataset(out_path+split_type, max_x, max_y, max_r, n_workers)
