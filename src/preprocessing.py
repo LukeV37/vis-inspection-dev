@@ -92,11 +92,11 @@ if __name__=="__main__":
     data_path = "../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"
     out_path= "../output_debug/"
     os.makedirs(out_path, exist_ok=True)
-    max_x = 5
-    max_y = 5
-    max_r = 5
+    max_x = 1
+    max_y = 1
+    max_r = 1
     n_workers = 8
-    #clean_raw_images(data_path, out_path)
+    clean_raw_images(data_path, out_path)
     for split_type in ["Train/", "Val/", "Test/"]:
         print("Preprocessing ", split_type)
         augment_dataset(out_path+split_type, max_x, max_y, max_r, n_workers)
