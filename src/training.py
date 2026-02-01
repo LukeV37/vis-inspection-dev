@@ -2,14 +2,7 @@ import numpy as np
 import glob
 import tensorflow as tf
 
-def do_training(in_path, model_file, model, epochs, batch_size):
-    # Load the dataset
-    train_file_paths = sorted(glob.glob(in_path+'Train/preprocessed*.npy'))
-    val_file_paths = sorted(glob.glob(in_path+'Val/preprocessed*.npy'))
-
-    train_dataset = create_dataset(train_file_paths, batch_size=batch_size, shuffle=True)
-    val_dataset = create_dataset(val_file_paths, batch_size=batch_size, shuffle=False)
-
+def do_training(model, train_dataset, val_dataset, epochs, batch_size, out_path):
     # Pass dummy data to initialize the model
     dummy_input = tf.zeros((1, 1080, 1920, 3))
     _ = model(dummy_input)
@@ -27,14 +20,22 @@ def do_training(in_path, model_file, model, epochs, batch_size):
     model.fit(train_dataset, epochs=epochs, validation_data=val_dataset, steps_per_epoch=len(train_file_paths) // batch_size, validation_steps=len(val_file_paths) // batch_size)
 
     # Save the weights
-    model.save_weights(model_file)
+    model.save_weights(out_path+"model.weights.h5")
 
 if __name__=="__main__":
     from model import ConvAutoencoder
     from data_loader import create_dataset
+
+    # Parameters
     model = ConvAutoencoder(embed_dim=64, channels=16)
-    model_file="../output_debug/model.weights.h5"
-    in_path="../output_debug/"
+    path="../output_debug/"
     epochs=2
     batch_size=32
-    do_training(in_path, model_file, model, epochs, batch_size)
+
+    # Load the dataset
+    train_file_paths = sorted(glob.glob(path+'Train/preprocessed*.npy'))
+    val_file_paths = sorted(glob.glob(path+'Val/preprocessed*.npy'))
+    train_dataset = create_dataset(train_file_paths, batch_size=batch_size, shuffle=True)
+    val_dataset = create_dataset(val_file_paths, batch_size=batch_size, shuffle=False)
+
+    do_training(model, train_dataset, val_dataset, epochs, batch_size, path)
