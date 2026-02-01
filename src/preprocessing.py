@@ -72,7 +72,7 @@ def augment_dataset(path, max_x, max_y, max_r, n_workers):
 
     x_list = [x for x in range(-max_x, max_x+1, 10)]
     y_list = [y for y in range(-max_y, max_y+1, 10)]
-    r_list = [r for r in range(-max_r, max_r+1, 1)]
+    r_list = [r for r in range(-max_r, max_r+1, 5)]
 
 	# Create all parameter combinations
     param_combinations = list(itertools.product(x_list, y_list, r_list))
