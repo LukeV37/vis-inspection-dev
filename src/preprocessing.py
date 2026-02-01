@@ -70,8 +70,8 @@ def augment_dataset(path, max_x, max_y, max_r, n_workers):
     names = [os.path.basename(x) for x in image_list]
     IDs = [name[6:10] for name in names]
 
-    x_list = [x for x in range(-max_x, max_x+1, 1)]
-    y_list = [y for y in range(-max_y, max_y+1, 1)]
+    x_list = [x for x in range(-max_x, max_x+1, 10)]
+    y_list = [y for y in range(-max_y, max_y+1, 10)]
     r_list = [r for r in range(-max_r, max_r+1, 1)]
 
 	# Create all parameter combinations
@@ -92,11 +92,11 @@ if __name__=="__main__":
     data_path = "../datasets/R0_DATA_FLEX_F1/R0_Triplet_Data_Flex_F1_F_White_bg/"
     out_path= "../output_debug/"
     os.makedirs(out_path, exist_ok=True)
-    max_x = 1
-    max_y = 1
+    max_x = 10
+    max_y = 10
     max_r = 1
     n_workers = 8
-    clean_raw_images(data_path, out_path)
+    clean_raw_images(data_path, out_path, split=(0.8,0.05,0.15))
     for split_type in ["Train/", "Val/", "Test/"]:
         print("Preprocessing ", split_type)
         augment_dataset(out_path+split_type, max_x, max_y, max_r, n_workers)
