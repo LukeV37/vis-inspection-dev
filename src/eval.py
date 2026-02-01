@@ -5,10 +5,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-def eval_model(test_dataset, path, out_dir, batch_size):
-    # Create the output directory
-    os.makedirs(out_dir, exist_ok=True)
-
+def eval_model(test_dataset, path, batch_size):
     # Get tag from file names
     test_file_paths = sorted(glob.glob(path+'Test/preprocessed*.npy'))
     names = [os.path.basename(x) for x in test_file_paths]
@@ -26,9 +23,9 @@ def eval_model(test_dataset, path, out_dir, batch_size):
     print("Saving images...")
     for i in tqdm(range(len(pred_image))):
         img = pred_image[i]
-        out_path = os.path.join(out_dir, "pred_"+tag[i]+".png")
+        out_path = os.path.join(path, "Predictions", "pred_"+tag[i]+".png")
         plt.imsave(out_path, img)
-    print(f"Saved {len(pred_image)} images to '{out_dir}'")
+    print(f"Saved {len(pred_image)} images to '{path}/Predictions'")
 
 if __name__ == "__main__":
     from model import ConvAutoencoder
@@ -37,11 +34,13 @@ if __name__ == "__main__":
     # Parameters
     model = ConvAutoencoder(embed_dim=64, channels=16)
     path = "../output_debug/"
-    out_dir = "../output_debug/Predictions"
     batch_size = 32
+
+    # Create the output directory
+    os.makedirs(path+"Predictions/", exist_ok=True)
 
     # Load the dataset
     test_file_paths = sorted(glob.glob(path+'Test/preprocessed*.npy'))
     test_dataset = create_dataset(test_file_paths, batch_size=batch_size, shuffle=False)
 
-    eval_model(test_dataset, path, out_dir, batch_size)
+    eval_model(test_dataset, path, batch_size)
