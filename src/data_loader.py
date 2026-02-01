@@ -4,13 +4,13 @@ import numpy as np
 def create_dataset(file_paths, batch_size=32, shuffle=True, shuffle_buffer_size=1000):
     """
     Create a TensorFlow dataset from numpy file paths.
-    
+
     Args:
         file_paths: List of paths to .npy files
         batch_size: Number of samples per batch
         shuffle: Whether to shuffle the dataset
         shuffle_buffer_size: Size of shuffle buffer (larger = more random but more memory)
-    
+
     Returns:
         tf.data.Dataset ready for training
     """
