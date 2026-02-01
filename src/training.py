@@ -2,7 +2,7 @@ import numpy as np
 import glob
 import tensorflow as tf
 
-def do_training(model, train_dataset, val_dataset, epochs, batch_size, out_path):
+def do_training(model, train_dataset, val_dataset, epochs, batch_size, out_path, train_size, val_size):
     # Pass dummy data to initialize the model
     dummy_input = tf.zeros((1, 1080, 1920, 3))
     _ = model(dummy_input)
@@ -17,7 +17,7 @@ def do_training(model, train_dataset, val_dataset, epochs, batch_size, out_path)
     model.compile(optimizer='adam', loss='mse')
 
     # Train the model
-    model.fit(train_dataset, epochs=epochs, validation_data=val_dataset, steps_per_epoch=len(train_file_paths) // batch_size, validation_steps=len(val_file_paths) // batch_size)
+    model.fit(train_dataset, epochs=epochs, validation_data=val_dataset, steps_per_epoch=train_size // batch_size, validation_steps=val_size // batch_size)
 
     # Save the weights
     model.save_weights(out_path+"model.weights.h5")
@@ -38,4 +38,4 @@ if __name__=="__main__":
     train_dataset = create_dataset(train_file_paths, batch_size=batch_size, shuffle=True)
     val_dataset = create_dataset(val_file_paths, batch_size=batch_size, shuffle=False)
 
-    do_training(model, train_dataset, val_dataset, epochs, batch_size, path)
+    do_training(model, train_dataset, val_dataset, epochs, batch_size, path, len(train_file_paths), len(val_file_paths))
