@@ -1,6 +1,5 @@
 import numpy as np
 import glob
-from data_loader import create_dataset
 import tensorflow as tf
 
 def do_training(in_path, model_file, model, epochs, batch_size):
@@ -32,10 +31,10 @@ def do_training(in_path, model_file, model, epochs, batch_size):
 
 if __name__=="__main__":
     from model import ConvAutoencoder
-
+    from data_loader import create_dataset
     model = ConvAutoencoder(embed_dim=64, channels=16)
-    model_file="../output/my_model.weights.h5"
-    in_path="../output/"
+    model_file="../output_debug/model.weights.h5"
+    in_path="../output_debug/"
     epochs=2
     batch_size=32
     do_training(in_path, model_file, model, epochs, batch_size)
