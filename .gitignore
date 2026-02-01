@@ -1,6 +1,8 @@
 *.npy
 *.h5
 output*
+training*
+preprocessed*
 
 venv/venv/
 .ipynb_checkpoints
