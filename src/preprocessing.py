@@ -36,6 +36,7 @@ def clean_raw_images(in_path, out_path, split=(0.8,0.05,0.15)):
     for i in tqdm(range(len(image_ID))):
         ID = image_ID[i]
         image = cv.imread(raw_image_list[i]) # Convert jpg to BGR array (1080,1920,3)
+        image = cv.resize(image, (384,216), interpolation=cv.INTER_AREA)
         image = cv.cvtColor(image, cv.COLOR_BGR2RGB) # Convert BGR to RBG array
         clean_image = remove(image)[:,:,0:3] # Remove transparancy layer
         if ID <= train_split:
