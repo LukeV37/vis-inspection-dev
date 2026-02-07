@@ -28,7 +28,7 @@ def create_dataset(file_paths, batch_size=32, shuffle=True, shuffle_buffer_size=
             inp=[filepath],
             Tout=tf.float32
         )
-        image.set_shape([1080, 1920, 3])
+        image.set_shape([384, 384, 3])
         return image, image
 
     # Create dataset from file paths

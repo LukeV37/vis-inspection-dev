@@ -12,7 +12,7 @@ def eval_model(model, test_dataset, data_path, pred_path, batch_size):
     tag = [name[12:-4] for name in names]
 
     # load the trained weights
-    dummy_input = tf.zeros((1, 1080, 1920, 3))
+    dummy_input = tf.zeros((1, 384, 384, 3))
     _ = model(dummy_input)
     model.load_weights(pred_path+"model.weights.h5")
 
