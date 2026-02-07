@@ -14,17 +14,17 @@ doTraining=True
 doEval=True
 
 # Preprocessing Parameters
-max_x_translation = 10
-max_y_translation = 10
-max_rotation = 5
+max_x_translation = 50
+max_y_translation = 50
+max_rotation = 20
 n_workers=24
 split=(0.8,0.05,0.15)
 
 # Training Parameters
-latent_dim=256
-channels=16
-epochs=10
-batch_size=32
+latent_dim=512
+channels=512
+epochs=30
+batch_size=64
 
 # Preprocessing Paths
 preprocess_path="preprocessed_datasets_x"+str(max_x_translation)+"_y"+str(max_y_translation)+"_r"+str(max_rotation)+"/"
