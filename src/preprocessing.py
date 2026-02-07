@@ -39,6 +39,20 @@ def clean_raw_images(in_path, out_path, split=(0.8,0.05,0.15)):
         image = cv.resize(image, (384,216), interpolation=cv.INTER_AREA)
         image = cv.cvtColor(image, cv.COLOR_BGR2RGB) # Convert BGR to RBG array
         clean_image = remove(image)[:,:,0:3] # Remove transparancy layer
+        # Pad Image
+        height, width = clean_image.shape[:2]
+        max_dim = max(height, width)
+        pad_height = max_dim - height
+        pad_width = max_dim - width
+        top_pad = pad_height // 2
+        bottom_pad = pad_height - top_pad
+        left_pad = pad_width // 2
+        right_pad = pad_width - left_pad
+        padded_img = np.pad(clean_image,
+                            pad_width=((top_pad, bottom_pad), (left_pad, right_pad), (0, 0)),
+                            mode='constant',
+                            constant_values=0
+                           )
         if ID <= train_split:
             save_type="Train"
         elif ID > train_split and ID <= test_split:
@@ -47,10 +61,10 @@ def clean_raw_images(in_path, out_path, split=(0.8,0.05,0.15)):
             save_type="Test"
 
         out_file_npy = os.path.join(out_path, save_type, f"clean_{ID:04d}.npy")
-        np.save(out_file_npy, clean_image)
+        np.save(out_file_npy, padded_img)
 
         out_file_png = os.path.join(out_path, save_type, f"clean_{ID:04d}.png")
-        plt.imsave(out_file_png, clean_image)
+        plt.imsave(out_file_png, padded_img)
 
 def process_augmentation(params, image, ID, path):
     """Process a single augmentation combination"""
