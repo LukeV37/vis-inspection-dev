@@ -51,7 +51,7 @@ class Encoder(keras.Model):
         self.bn6 = layers.BatchNormalization()
 
         # Conv7: (batch, 4, 4, 512) -> (batch, 2, 2, 512)
-        self.conv7 = layers.Conv2D(filters=512, kernel_size=3, strides=2, padding='same')
+        self.conv7 = layers.Conv2D(filters=1024, kernel_size=3, strides=2, padding='same')
         self.bn7 = layers.BatchNormalization()
 
         # Conv8: (batch, 2, 2, 512) -> (batch, 1, 1, channels)
@@ -160,7 +160,13 @@ class Decoder(keras.Model):
         self.bn7 = layers.BatchNormalization()
 
         # Deconv8: (batch, 128, 128, 32) -> (batch, 384, 384, 3)
-        self.deconv8 = layers.Conv2DTranspose(filters=3, kernel_size=3, strides=3, padding='same', activation='sigmoid')
+        self.deconv8 = layers.Conv2DTranspose(filters=16, kernel_size=3, strides=3, padding='same')
+
+        # Refinement layer 4 (no upsampling):
+        self.deconv9 = layers.Conv2DTranspose(filters=8, kernel_size=3, strides=1, padding='same')
+
+        # Output reconstruction layer:
+        self.deconv10 = layers.Conv2DTranspose(filters=3, kernel_size=3, strides=1, padding='same', activation='sigmoid')
 
     def call(self, x, training=False):
         x = self.fc(x)
@@ -195,6 +201,10 @@ class Decoder(keras.Model):
         x = self.leaky_relu(x)
 
         x = self.deconv8(x)
+        x = self.leaky_relu(x)
+        x = self.deconv9(x)
+        x = self.leaky_relu(x)
+        x = self.deconv10(x)
         return x
 
 
