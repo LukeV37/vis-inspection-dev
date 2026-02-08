@@ -16,16 +16,26 @@ def eval_model(model, test_dataset, data_path, pred_path, batch_size):
     _ = model(dummy_input)
     model.load_weights(pred_path+"model.weights.h5")
 
-    # run the predictions
-    pred_image = model.predict(test_dataset)
+    # Create output directory if it doesn't exist
+    os.makedirs(os.path.join(pred_path, "Predictions"), exist_ok=True)
 
-    # Save each of the predictions as a JPG
-    print("Saving images...")
-    for i in tqdm(range(len(pred_image))):
-        img = pred_image[i]
-        out_path = os.path.join(pred_path, "Predictions", "pred_"+tag[i]+".png")
-        plt.imsave(out_path, img)
-    print(f"Saved {len(pred_image)} images to '{pred_path}/Predictions'")
+    # Run predictions in batches
+    print("Generating predictions in batches...")
+    image_index = 0
+
+    for batch_inputs, _ in tqdm(test_dataset, desc="Processing batches"):
+        # Predict on this batch
+        batch_preds = model(batch_inputs, training=False).numpy()
+
+        # Save each prediction in the batch
+        for i in range(batch_preds.shape[0]):
+            if image_index < len(tag):
+                img = batch_preds[i]
+                out_path = os.path.join(pred_path, "Predictions", "pred_"+tag[image_index]+".png")
+                plt.imsave(out_path, img)
+                image_index += 1
+
+    print(f"Saved {image_index} images to '{pred_path}Predictions'")
 
 if __name__ == "__main__":
     from model import ConvAutoencoder
