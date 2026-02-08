@@ -22,8 +22,8 @@ split=(0.8,0.05,0.15)
 
 # Training Parameters
 latent_dim=512
-channels=512
-epochs=30
+channels=2048
+epochs=20
 batch_size=64
 
 # Preprocessing Paths
