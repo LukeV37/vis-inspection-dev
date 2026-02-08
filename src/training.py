@@ -50,6 +50,7 @@ def do_training(model, train_dataset, val_dataset, epochs, batch_size, out_path,
     plt.title('Model Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
+    plt.yscale('log')
     plt.legend()
     plt.grid(True)
 
@@ -60,6 +61,7 @@ def do_training(model, train_dataset, val_dataset, epochs, batch_size, out_path,
     plt.title('Model MAE')
     plt.xlabel('Epoch')
     plt.ylabel('MAE')
+    plt.yscale('log')
     plt.legend()
     plt.grid(True)
 
